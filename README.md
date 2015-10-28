@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/azawawi/perl6-file-zip.svg?branch=master)](https://travis-ci.org/azawawi/perl6-file-zip)
 
-This module provides a [Perl 6](http://perl6.org) API to the [ZIP file format](https://en.wikipedia.org/wiki/Zip_(file_format).
+This module provides a [Perl 6](http://perl6.org) API to the [ZIP file format](https://en.wikipedia.org/wiki/Zip_\(file_format\)).
 
 ***Note:*** This module is a work in progress. Please see its project status [here](https://github.com/azawawi/perl6-file-zip/blob/master/README.md#project-status).
 
