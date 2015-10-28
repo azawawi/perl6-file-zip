@@ -7,7 +7,9 @@ use File::Zip;
 
 my $zip-file = File::Zip.new(file-name => 'examples/webdriver.xpi');
 
+say $_.perl for $zip-file.files;
+
 LEAVE {
   $zip-file.close if $zip-file.defined;
 }
-# say $_.perl for $zip-file.files;
+

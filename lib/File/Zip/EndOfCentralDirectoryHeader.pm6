@@ -1,7 +1,7 @@
 
 use v6;
 
-unit class EndOfCentralDirectoryHeader;
+unit class File::Zip::EndOfCentralDirectoryHeader;
 
 has $.signature is rw;
 has $.number-disk is rw;
