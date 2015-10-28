@@ -130,8 +130,6 @@ method _find-eocd-record-offset {
   self.fh.seek(0, 2);
   my $file-size = self.fh.tell;
 
-  say "File size is $file-size";
-
   # Find EOCD hexidecimal signature 0x04034b50 in little endian
   for 0..$file-size-1 -> $offset {
     self.fh.seek(-$offset, 2);
