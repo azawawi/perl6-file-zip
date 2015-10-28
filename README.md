@@ -12,7 +12,12 @@ This module provides a [Perl 6](http://perl6.org) API to the [ZIP file format](h
 use File::Zip;
 
 my $zip-file = File::Zip.new(file-name => 'test.zip');
+
+# List the files in the archive
 say $_.perl for $zip-file.files;
+
+# Unzip the archive into given directory
+$zip-file.unzip(directory => 'output');
 ```
 
 For more examples, please see the [examples](examples) folder.

@@ -9,7 +9,7 @@ my $zip-file = File::Zip.new(file-name => 'examples/webdriver.xpi');
 
 say $_.perl for $zip-file.files;
 
-$zip-file.unzip;
+$zip-file.unzip(directory => 'output');
 
 LEAVE {
   $zip-file.close if $zip-file.defined;
