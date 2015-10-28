@@ -3,6 +3,8 @@ use v6;
 
 unit class File::Zip;
 
+use File::Zip::EndOfCentralDirectoryHeader;
+
 has Str        $.file-name   is rw;
 has Bool       $.debug       is rw;
 has IO::Handle $.fh          is rw;
@@ -16,6 +18,9 @@ method BUILD(Str :$file-name) {
   die "Cannot find EOCD record" if $eocd-offset == -1;
 
   say "eocd offset is " ~ $eocd-offset;
+  
+  my $header = self.read-eocd($eocd-offset);
+  say $header.perl;
 }
 
 method files {
@@ -29,24 +34,31 @@ method close {
   self.fh.close if self.fh.defined;
 }
 
-sub find-cd-offset(Str $file-name, Int $eocd-offset) {
-    $fh.seek(-$eocd-offset, 2);
+method read-eocd(Int $eocd-offset) {
+    self.fh.seek(-$eocd-offset, 2);
 
-    my Buf $eocd-buf = $fh.read(22); 
-    my ($signature, $number-disk, $disk-central-directory-on-disk, $number-central-directory-records-on-disk,
-    $total-number-central-directory-records, $central-directory-size, $offset-central-directory, $comment-length) =
-      $eocd-buf.unpack("L S S S S L L S");
-      
-    say $eocd-buf.unpack("L S S S S L L S").perl;
-      
-    printf("signature = %08x\n", $signature);
-    say "size   = " ~ $central-directory-size;
-    printf("offset = %08x\n", $offset-central-directory);
-    say "number-central-directory-records-on-disk = $number-central-directory-records-on-disk";
-    say "Comment length = " ~ $comment-length;
-    say $disk-central-directory-on-disk;
+    my Buf $eocd-buf = self.fh.read(22); 
     
-    return ($offset-central-directory, $number-central-directory-records-on-disk);
+    my $eocd = EndOfCentralDirectoryHeader.new;
+    ($eocd.signature, $eocd.number-disk, $eocd.disk-central-directory-on-disk, $eocd.number-central-directory-records-on-disk,
+    $eocd.total-number-central-directory-records, $eocd.central-directory-size, $eocd.offset-central-directory, $eocd.comment-length) =
+      $eocd-buf.unpack("L S S S S L L S");
+    
+    printf("signature = %08x\n", $eocd.signature);
+    say "size   = " ~ $eocd.central-directory-size;
+    printf("offset = %08x\n", $eocd.offset-central-directory);
+    say "number-central-directory-records-on-disk = $($eocd.number-central-directory-records-on-disk)";
+    say "Comment length = " ~ $eocd.comment-length;
+    say $eocd.disk-central-directory-on-disk;
+  
+    if $eocd.comment-length > 0 {
+      my Buf $comment-buf = self.fh.read($eocd.comment-length);
+      $eocd.comment = $comment-buf.decode;
+    } else {
+      $eocd.comment = '';
+    }
+
+    return $eocd;
 }
 
 =begin markdown

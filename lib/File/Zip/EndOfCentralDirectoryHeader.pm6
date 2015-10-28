@@ -10,5 +10,5 @@ has $.number-central-directory-records-on-disk is rw;
 has $.total-number-central-directory-records is rw;
 has $.central-directory-size is rw;
 has $.offset-central-directory is rw;
-has $.comment-length;
-has Str $.comment;
+has $.comment-length is rw;
+has Str $.comment is rw;
