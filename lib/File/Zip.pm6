@@ -45,9 +45,9 @@ method files {
   return @files;
 }
 
-method unzip(Str $directory = '.') {
+method unzip(Str :$directory = '.') {
   for @.cd-headers -> $cd-header {
-    self._read-local-file-header($cd-header);
+    self._read-local-file-header($cd-header, $directory);
   }
 }
 
@@ -58,7 +58,7 @@ method close {
   self.fh.close if self.fh.defined;
 }
 
-method _read-local-file-header($cd-header) {
+method _read-local-file-header($cd-header, Str $directory) {
   say "seeking to offset #$cd-header.local-file-header-offset";
   self.fh.seek($cd-header.local-file-header-offset, 0);
 
@@ -93,19 +93,19 @@ method _read-local-file-header($cd-header) {
     # Not compressed
     if $cd-header.compressed-size > 0 {
       my $original = self.fh.read($cd-header.compressed-size);
-      "output".IO.mkdir;
-      "output/$output-file-name".IO.spurt($original, :bin);
+      $directory.IO.mkdir;
+      "$directory/$output-file-name".IO.spurt($original, :bin);
     } else {
-      "output/$output-file-name".IO.mkdir;
-      #"output/$output-file-name".IO.spurt($original, :bin);
+      "$directory/$output-file-name".IO.mkdir;
+      #"$directory/$output-file-name".IO.spurt($original, :bin);
     }
   } elsif $compression-method == 0x08 {
     # Deflate compression method
     my $compressed = self.fh.read($cd-header.compressed-size);
     my $decompressor = Compress::Zlib::Stream.new(:deflate);
     my $original = $decompressor.inflate($compressed);
-    "output".IO.mkdir;
-    "output/$output-file-name".IO.spurt($original, :bin);
+    $directory.IO.mkdir;
+    "$directory/$output-file-name".IO.spurt($original, :bin);
 
     CATCH {
       default {
