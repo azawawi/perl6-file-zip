@@ -11,7 +11,8 @@ This module provides a [Perl 6](http://perl6.org) API to the [ZIP file format](h
 ```Perl6
 use File::Zip;
 
-# TODO  add an example
+my $zip-file = File::Zip.new(file-name => 'test.zip');
+say $_.perl for $zip-file.files;
 ```
 
 For more examples, please see the [examples](examples) folder.
