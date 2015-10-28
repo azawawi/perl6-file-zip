@@ -35,25 +35,17 @@ method read-from-handle(IO::Handle $fh) {
 
   if $.file-name-length > 0 {
     my $file-name-buf = $fh.read($.file-name-length);
-    $.file-name = $file-name-buf.unpack("A*");
+    $.file-name = $file-name-buf.decode('ascii');
   } else {
     $.file-name = '';
   }
 
-  say "extra-file-name-length = $.extra-file-name-length";
-  say "file-comment-length = $.file-comment-length";
   $fh.seek($.extra-file-name-length, 1);
   
   if $.file-comment-length > 0 {
     my $file-comment-buf = $fh.read($.file-comment-length);
-    $.file-comment = $fh.unpack("A*");
+    $.file-comment = $fh.decode('ascii');
   } else {
     $.file-comment = '';
   }
-
-  printf("signature = %08x\n", $.signature);
-  say "filename is " ~ $.file-name;
-  say "compression-method is " ~ $.compression-method;
-  say "compressed-size is " ~ $.compressed-size;
-  say "---";
 }

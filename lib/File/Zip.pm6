@@ -20,18 +20,20 @@ has Int        $.eocd-offset is rw;
 has            $.eocd-header is rw;
 has            @.cd-headers  is rw;
 
-method BUILD(Str :$file-name) {
+method BUILD(Bool :$debug = False, Str :$file-name) {
   self.file-name = $file-name;
+  self.debug     = $debug;
   self.fh        = $file-name.IO.open(:bin);
 
   my $eocd-offset = self._find-eocd-record-offset;
   die "Cannot find EOCD record" if $eocd-offset == -1;
 
-  say "eocd offset is " ~ $eocd-offset;
+  say "eocd offset = $eocd-offset" if self.debug;
   my $eocd-header = File::Zip::EndOfCentralDirectoryHeader.new;
   $eocd-header.read-from-handle(self.fh, $eocd-offset);
   self.eocd-header = $eocd-header;
-  say $eocd-header.perl;
+
+  say "eocd-header = " ~ $eocd-header if self.debug;
 
   self._read-cd-headers;
 }
@@ -47,6 +49,7 @@ method files {
 
 method unzip(Str :$directory = '.') {
   for @.cd-headers -> $cd-header {
+    say "Extracting $( $cd-header.file-name )" if self.debug;
     self._read-local-file-header($cd-header, $directory);
   }
 }
@@ -59,7 +62,6 @@ method close {
 }
 
 method _read-local-file-header($cd-header, Str $directory) {
-  say "seeking to offset #$cd-header.local-file-header-offset";
   self.fh.seek($cd-header.local-file-header-offset, 0);
 
   my Buf $local_file_header-buf = self.fh.read(30);
@@ -69,23 +71,9 @@ method _read-local-file-header($cd-header, Str $directory) {
     $uncompressed-size, $file-name-length, $extra-field-length
   ) = $local_file_header-buf.unpack("L S S S S S L L L S S");
 
-  printf(
-      "signature              = %08x\n", $signature);
-  say "version                = " ~ $version;
-  say "flag                   = " ~ $general-purpose-bit-flag;
-  say "method                 = " ~ $compression-method;
-  say "last-modified-time     = " ~ $last-modified-time;
-  say "last-modified-date     = " ~ $last-modified-date;
-  say "crc 32                 = " ~ $crc32;
-  say "compressed size        = " ~ $compressed-size;
-  say "uncompressed size      = " ~ $uncompressed-size;
-  say "file name length       = " ~ $file-name-length;
-  say "extra field length     = " ~ $extra-field-length;
-
   my Buf $file-name-buf = self.fh.read($file-name-length);
 
-  my $output-file-name = $file-name-buf.unpack("A*");
-  say $output-file-name;
+  my $output-file-name = $file-name-buf.decode('ascii');
 
   self.fh.seek($extra-field-length, 1);
 

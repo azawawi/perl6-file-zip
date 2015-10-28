@@ -23,13 +23,6 @@ method read-from-handle(IO::Handle $fh, Int $eocd-offset) {
       $.offset-central-directory, $.comment-length
     ) = $eocd-buffer.unpack("L S S S S L L S");
 
-    printf("signature = %08x\n", $.signature);
-    say "size   = " ~ $.central-directory-size;
-    printf("offset = %08x\n", $.offset-central-directory);
-    say "number-central-directory-records-on-disk = $.number-central-directory-records-on-disk";
-    say "Comment length = " ~ $.comment-length;
-
-    say $.disk-central-directory-on-disk;
     if $.comment-length > 0 {
       my Buf $comment-buffer = $fh.read($.comment-length);
       $.comment = $comment-buffer.decode;
