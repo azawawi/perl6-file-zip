@@ -3,6 +3,7 @@ use v6;
 
 use File::Zip::EndOfCentralDirectoryHeader;
 use File::Zip::CentralDirectoryHeader;
+use Compress::Zlib;
 
 =begin markdown
 
@@ -32,7 +33,7 @@ method BUILD(Str :$file-name) {
   self.eocd-header = $eocd-header;
   say $eocd-header.perl;
 
-  self.read-cd-headers;
+  self._read-cd-headers;
 }
 
 method files {
@@ -44,6 +45,12 @@ method files {
   return @files;
 }
 
+method unzip(Str $directory = '.') {
+  for @.cd-headers -> $cd-header {
+    self._read-local-file-header($cd-header);
+  }
+}
+
 =begin markdown
 
 =end markdown
@@ -51,7 +58,66 @@ method close {
   self.fh.close if self.fh.defined;
 }
 
-method read-cd-headers {
+method _read-local-file-header($cd-header) {
+  say "seeking to offset #$cd-header.local-file-header-offset";
+  self.fh.seek($cd-header.local-file-header-offset, 0);
+
+  my Buf $local_file_header-buf = self.fh.read(30);
+  my (
+    $signature, $version, $general-purpose-bit-flag, $compression-method,
+    $last-modified-time, $last-modified-date, $crc32, $compressed-size,
+    $uncompressed-size, $file-name-length, $extra-field-length
+  ) = $local_file_header-buf.unpack("L S S S S S L L L S S");
+
+  printf(
+      "signature              = %08x\n", $signature);
+  say "version                = " ~ $version;
+  say "flag                   = " ~ $general-purpose-bit-flag;
+  say "method                 = " ~ $compression-method;
+  say "last-modified-time     = " ~ $last-modified-time;
+  say "last-modified-date     = " ~ $last-modified-date;
+  say "crc 32                 = " ~ $crc32;
+  say "compressed size        = " ~ $compressed-size;
+  say "uncompressed size      = " ~ $uncompressed-size;
+  say "file name length       = " ~ $file-name-length;
+  say "extra field length     = " ~ $extra-field-length;
+
+  my Buf $file-name-buf = self.fh.read($file-name-length);
+
+  my $output-file-name = $file-name-buf.unpack("A*");
+  say $output-file-name;
+
+  self.fh.seek($extra-field-length, 1);
+
+  if $compression-method == 0x0 {
+    # Not compressed
+    if $cd-header.compressed-size > 0 {
+      my $original = self.fh.read($cd-header.compressed-size);
+      "output".IO.mkdir;
+      "output/$output-file-name".IO.spurt($original, :bin);
+    } else {
+      "output/$output-file-name".IO.mkdir;
+      #"output/$output-file-name".IO.spurt($original, :bin);
+    }
+  } elsif $compression-method == 0x08 {
+    # Deflate compression method
+    my $compressed = self.fh.read($cd-header.compressed-size);
+    my $decompressor = Compress::Zlib::Stream.new(:deflate);
+    my $original = $decompressor.inflate($compressed);
+    "output".IO.mkdir;
+    "output/$output-file-name".IO.spurt($original, :bin);
+
+    CATCH {
+      default {
+        say $_;
+      }
+    }
+  } else {
+    die "Cannot handle compression method '$compression-method'";
+  }
+}
+
+method _read-cd-headers {
   self.fh.seek(self.eocd-header.offset-central-directory, 0);
 
   my $number-records = self.eocd-header.number-central-directory-records-on-disk;
