@@ -47,8 +47,8 @@ $ prove -e perl6
 
 ## Author
 
-Ahmad M. Zawawi, azawawi on #perl6, https://github.com/azawawi/
+Ahmad M. Zawawi, [azawawi](https://github.com/azawawi/) on #perl6
 
 ## License
 
-Artistic License 2.0
+MIT License
