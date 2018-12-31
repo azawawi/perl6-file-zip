@@ -3,6 +3,7 @@
     "license" : "MIT",
     "version": "*",
     "perl": "6.c",
+    "auth": "github:azawawi",
     "description": "Perl 6 API to the ZIP file format",
     "depends": [
       "Compress::Zlib"
