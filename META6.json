@@ -1,5 +1,6 @@
 {
     "name": "File::Zip",
+    "auth": "github:azawawi",
     "license" : "MIT",
     "version": "*",
     "perl": "6.c",
