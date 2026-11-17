@@ -5,7 +5,7 @@
     "perl": "6.c",
     "description": "Perl 6 API to the ZIP file format",
     "depends": [
-      "Compress::Zlib"
+      "Compress::Zlib:ver<2.0.0+>:auth<zef:apogee>"
     ],
     "provides": {
         "File::Zip"                              : "lib/File/Zip.pm6",
